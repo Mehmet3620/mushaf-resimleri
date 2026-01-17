@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Dost Yurdu | Vakur Mushaf Tasarımı</title>
+    <style>
+        body { background: #050505; color: #d4af37; font-family: 'Times New Roman', serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow: hidden; }
+        
+        #mushaf-container { 
+            perspective: 3000px; width: 550px; height: 750px; 
+            position: relative; transition: all 0.6s ease; 
+        }
+        #mushaf-container.is-open { width: 1100px; }
+
+        .page-frame { position: absolute; width: 550px; height: 100%; background: #fdfcf7; border: 1px solid #d4af37; box-sizing: border-box; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s ease; box-shadow: 0 0 40px rgba(0,0,0,0.8); outline: 15px solid #1a472a; outline-offset: -15px; }
+        .left-page { left: 0; border-radius: 10px 0 0 10px; border-right: 2px solid #ddd; }
+        .right-page { right: 0; border-radius: 0 10px 10px 0; border-left: 2px solid #ddd; }
+        .quran-img { width: 85%; height: 85%; object-fit: contain; z-index: 10; }
+
+        /* KAPAKLARIN ANA STİLİ */
+        .full-cover { position: absolute; right: 0; width: 550px; height: 100%; transform-origin: left; z-index: 500; cursor: pointer; transition: transform 1.2s ease, opacity 0.5s ease; transform-style: preserve-3d; }
+        .cover-side { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 0 10px 10px 0; }
+        .cover-front { background: #1a472a; border: 15px double #d4af37; color: #d4af37; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset 0 0 80px rgba(0,0,0,0.6); }
+        .cover-back { transform: rotateY(180deg); background: #1a472a; border-radius: 10px 0 0 10px; }
+
+        /* ARKA KAPAK ÖZEL (SAYFADAN BAĞIMSIZ) */
+        #back-cover-page { display: none; z-index: 2000; left: 0; right: 0; margin: auto; cursor: pointer; }
+        .info-text { padding: 40px; text-align: center; font-size: 18px; line-height: 1.7; }
+        .info-text h2 { border-bottom: 2px solid #d4af37; padding-bottom: 15px; margin-bottom: 20px; font-size: 28px; }
+
+        #corner-btn { position: absolute; right: 20px; bottom: 20px; width: 60px; height: 60px; z-index: 150; cursor: pointer; background: linear-gradient(135deg, transparent 50%, #d4af37 60%); border-radius: 0 0 10px 0; display: none; opacity: 0.8; }
+        .controls { margin-top: 40px; display: flex; gap: 15px; flex-direction: row-reverse; visibility: hidden; z-index: 3000; }
+        .btn-gold { background: #111; color: #d4af37; border: 1px solid #d4af37; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .page-label { border: 1px solid #d4af37; padding: 10px 30px; background: #000; min-width: 100px; text-align: center; }
+    </style>
+</head>
+<body>
+    <audio id="flip-sound" src="https://www.soundjay.com/misc/sounds/page-flip-01a.mp3" preload="auto"></audio>
+    <div id="mushaf-container">
+        <div class="page-frame left-page" id="lb"><img id="imgL" class="quran-img"></div>
+        <div class="page-frame right-page" id="rb"><img id="imgR" class="quran-img"><div id="corner-btn" onclick="nav(2)"></div></div>
+
+        <div id="main-cover" class="full-cover" onclick="openMushaf()">
+            <div class="cover-side cover-front">
+                <div style="border: 2px solid #d4af37; padding: 30px; text-align: center; width: 70%;">
+                    <div style="font-size: 40px; margin-bottom: 10px;">﷽</div>
+                    <h1 style="margin:0; font-size: 38px; letter-spacing: 4px;">DOST YURDU</h1>
+                    <div style="width: 100%; height: 2px; background: #d4af37; margin: 20px 0;"></div>
+                    <h2 style="margin:0; font-size: 24px;">KUR'AN-I KERİM</h2>
+                </div>
+            </div>
+            <div class="cover-side cover-back"></div>
+        </div>
+
+        <div id="back-cover-page" class="full-cover" onclick="closeToFront()">
+            <div class="cover-side cover-front" style="border-radius: 10px;">
+                <div class="info-text">
+                    <h2>MUSHAF BİLGİLERİ</h2>
+                    <p><b>Nüzul Zamanı:</b> Miladi 610, Kadir Gecesi.</p>
+                    <p><b>Nüzul Yeri:</b> Mekke, Hira Mağarası.</p>
+                    <p><b>Kime İndi:</b> Hz. Muhammed Mustafa (s.a.v.)</p>
+                    <p><b>İniş Süresi:</b> Yaklaşık 23 Yıl.</p>
+                    <p><b>Muhteva:</b> 114 Sure, 6236 Ayet, 30 Cüz.</p>
+                    <div style="width: 100%; height: 1px; background: #d4af37; margin: 20px 0;"></div>
+                    <p style="font-size: 14px; color: #d4af37; opacity:0.7;">Kapatmak için kapağa tıklayın.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls" id="ctrl-panel">
+        <button class="btn-gold" onclick="openBackCover()">ARKA KAPAK 📕</button>
+        <button class="btn-gold" onclick="jump(604)">SON ⏭</button>
+        <button class="btn-gold" onclick="nav(2)">◀ İLERİ</button>
+        <div class="page-label" id="page-info">0 - 1</div>
+        <button class="btn-gold" onclick="nav(-2)">GERİ ▶</button>
+        <button class="btn-gold" onclick="jump(0)">BAŞ ⏮</button>
+        <button class="btn-gold" onclick="closeToFront()">KAPAT 📖</button>
+    </div>
+
+    <script>
+        let p = 0;
+        const baseUrl = "https://raw.githubusercontent.com/Mehmet3620/mushaf-resimleri/main/";
+
+        function render() {
+            document.getElementById('imgR').src = baseUrl + (p + 1) + ".jpg";
+            document.getElementById('imgL').src = baseUrl + (p + 2) + ".jpg";
+            document.getElementById('page-info').innerText = p + " - " + (p + 1);
+        }
+
+        function openMushaf() {
+            render();
+            document.getElementById('mushaf-container').classList.add('is-open');
+            document.getElementById('main-cover').style.transform = "rotateY(-180deg)";
+            document.getElementById('back-cover-page').style.display = "none";
+            setTimeout(() => {
+                document.getElementById('lb').style.opacity = "1";
+                document.getElementById('rb').style.opacity = "1";
+                document.getElementById('ctrl-panel').style.visibility = "visible";
+                document.getElementById('corner-btn').style.display = "block";
+                document.getElementById('main-cover').style.zIndex = "-1";
+            }, 800);
+        }
+
+        function openBackCover() {
+            // Her şeyi temizle, kabı daralt ve sadece arka kapağı göster
+            document.getElementById('mushaf-container').classList.remove('is-open');
+            document.getElementById('lb').style.opacity = "0";
+            document.getElementById('rb').style.opacity = "0";
+            document.getElementById('main-cover').style.display = "none";
+            document.getElementById('back-cover-page').style.display = "block";
+            document.getElementById('corner-btn').style.display = "none";
+        }
+
+        function closeToFront() {
+            // Sistemi sıfırla ve ön kapağa dön
+            document.getElementById('mushaf-container').classList.remove('is-open');
+            document.getElementById('back-cover-page').style.display = "none";
+            document.getElementById('lb').style.opacity = "0";
+            document.getElementById('rb').style.opacity = "0";
+            const main = document.getElementById('main-cover');
+            main.style.display = "block";
+            main.style.zIndex = "500";
+            main.style.transform = "rotateY(0deg)";
+            document.getElementById('ctrl-panel').style.visibility = "hidden";
+        }
+
+        function nav(step) {
+            let next = p + step;
+            if (next >= 0 && next <= 604) {
+                const sound = document.getElementById('flip-sound');
+                if (sound) { sound.currentTime = 0; sound.play().catch(e => {}); }
+                p = next; render();
+            }
+        }
+
+        function jump(target) { p = target; render(); }
+    </script>
+</body>
+</html>
